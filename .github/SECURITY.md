@@ -12,6 +12,7 @@ Include a clear description of the issue, steps to reproduce, and the impact you
 
 ## Supported versions
 
+
 Security updates are provided for the latest major release and the previous major release when feasible. We encourage upgrading to the [latest release](https://github.com/crossplane-contrib/crossview/releases).
 
 ## Disclosure

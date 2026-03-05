@@ -43,6 +43,8 @@ deployment:
       maxUnavailable: 0
 
 # Resource limits and requests
+# Defaults are set for typical clusters. If the pod is OOMKilled when opening the dashboard,
+# increase memory (e.g. 1Gi–2Gi); see docs/TROUBLESHOOTING.md#oomkilled-when-opening-the-dashboard.
 resources:
   requests:
     memory: "256Mi"
