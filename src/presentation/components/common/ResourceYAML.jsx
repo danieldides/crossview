@@ -5,7 +5,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { yaml } from '@codemirror/lang-yaml';
 import {crossviewMirrorTheme} from '../../utils/crossviewMirrorTheme.js'
 import YAML from 'yaml';
-import { getBackgroundColor, getTextColor, colors } from '../../utils/theme.js';
+import { getTextColor, colors } from '../../utils/theme.js';
 
 export const ResourceYAML = ({ fullResource, colorMode }) => {
   const [copied, setCopied] = useState(false);
