@@ -1,11 +1,13 @@
 package commands
 
 import (
-	"github.com/spf13/cobra"
 	"crossview-go-server/api/middlewares"
 	"crossview-go-server/api/routes"
 	"crossview-go-server/lib"
 	"crossview-go-server/models"
+
+	"github.com/spf13/cobra"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // ServeCommand test command
@@ -58,6 +60,21 @@ func (s *ServeCommand) Run() lib.CommandRunner {
 				logger.Panicf("Failed to run database migrations: %v", err)
 			}
 			logger.Info("Database migrations completed successfully")
+			if env.AuthMode == "session" && env.DBEnabled {
+				hasAdmin, err := userRepo.HasAdmin()
+				if err != nil {
+					logger.Errorf("Failed to check for admin user: %v", err)
+					logger.Panicf("Failed to check for admin user: %v", err)
+				}
+				if !hasAdmin {
+					logger.Info("no admin user found. Creating admin user...")
+					err = createAdmin(env, *userRepo)
+					if err != nil {
+						logger.Errorf("Database connection is broken after migration error: %v", err)
+					}
+				}
+			}
+
 		}
 
 		middleware.Setup()
@@ -69,9 +86,27 @@ func (s *ServeCommand) Run() lib.CommandRunner {
 		} else {
 			_ = router.Gin.Run(":" + env.ServerPort)
 		}
+
 	}
 }
 
 func NewServeCommand() *ServeCommand {
 	return &ServeCommand{}
+}
+
+func createAdmin(env lib.Env, userRepository models.UserRepository) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(env.AdminPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	err = userRepository.Create(&models.User{
+		Username:     env.AdminUserName,
+		Email:        env.AdminUserName + "@" + env.AdminUserName + ".com",
+		PasswordHash: string(hash),
+		Role:         "admin",
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

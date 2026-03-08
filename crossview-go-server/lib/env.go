@@ -24,6 +24,11 @@ type Env struct {
 	AuthTrustedHeader string `mapstructure:"AUTH_TRUSTED_HEADER"`
 	AuthCreateUsers   bool   `mapstructure:"AUTH_CREATE_USERS"`
 	AuthDefaultRole   string `mapstructure:"AUTH_DEFAULT_ROLE"`
+	OIDCEnabled       bool   `mapstructure:"OIDC_ENABLED"`
+	SAMLEnabled       bool   `mapstructure:"SAML_ENABLED"`
+	DBEnabled         bool   `mapstructure:"DB_ENABLED"`
+	AdminUserName     string `mapstructure:"ADMIN_USERNAME"`
+	AdminPassword     string `mapstructure:"ADMIN_PASSWORD"`
 }
 
 func NewEnv() Env {
@@ -85,17 +90,39 @@ func NewEnv() Env {
 			"http://localhost:5173"))
 	env.AuthMode = getEnvOrDefault("AUTH_MODE", getEnvOrDefault("AUTH_MODE",
 		getConfigValue("server.auth.mode", viper.GetString("AUTH_MODE"), "session")))
+
+	env.AdminUserName = getEnvOrDefault("ADMIN_USERNAME", getEnvOrDefault("ADMIN_USERNAME",
+		getConfigValue("server.admin.username", viper.GetString("ADMIN_USERNAME"), "admin")))
+
+	env.AdminPassword = getEnvOrDefault("ADMIN_PASSWORD", getEnvOrDefault("ADMIN_PASSWORD",
+		getConfigValue("server.admin.password", viper.GetString("ADMIN_PASSWORD"), "password")))
+
 	env.AuthTrustedHeader = getEnvOrDefault("AUTH_TRUSTED_HEADER", getEnvOrDefault("AUTH_TRUSTED_HEADER",
 		getConfigValue("server.auth.header.trustedHeader", viper.GetString("AUTH_TRUSTED_HEADER"), "X-Auth-User")))
 	env.AuthDefaultRole = getEnvOrDefault("AUTH_DEFAULT_ROLE",
 		getConfigValue("server.auth.header.defaultRole", viper.GetString("AUTH_DEFAULT_ROLE"), "viewer"))
-	if v := os.Getenv("AUTH_CREATE_USERS"); v != "" {
-		env.AuthCreateUsers = v == "true" || v == "1"
-	} else if viper.IsSet("server.auth.header.createUsers") {
-		env.AuthCreateUsers = viper.GetBool("server.auth.header.createUsers")
-	} else {
-		env.AuthCreateUsers = true
-	}
+
+	env.OIDCEnabled = firstNonEmpty(
+		os.Getenv("OIDC_ENABLED"),
+		viper.GetString("sso.oidc.enabled"),
+	) == "true"
+
+	env.SAMLEnabled = firstNonEmpty(
+		os.Getenv("SAML_ENABLED"),
+		viper.GetString("sso.saml.enabled"),
+	) == "true"
+
+	env.DBEnabled = firstNonEmpty(
+		os.Getenv("DB_ENABLED"),
+		viper.GetString("database.enabled"),
+	) == "true"
+
+	env.AuthCreateUsers = firstNonEmpty(
+		os.Getenv("AUTH_CREATE_USERS"),
+		viper.GetString("server.auth.header.createUsers"),
+		"true",
+	) == "true"
+
 	return env
 }
 
@@ -127,6 +154,15 @@ func getEnvOrDefault(key, defaultValue string) string {
 	}
 	if defaultValue != "" {
 		return defaultValue
+	}
+	return ""
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
 	}
 	return ""
 }

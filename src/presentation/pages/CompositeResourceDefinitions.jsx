@@ -126,7 +126,7 @@ export const CompositeResourceDefinitions = () => {
     {
       header: 'Group',
       accessor: 'group',
-      minWidth: '250px',
+      minWidth: '200px',
     },
     {
       header: 'Resource Kind',

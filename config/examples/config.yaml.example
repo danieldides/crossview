@@ -4,6 +4,7 @@
 
 # Database Configuration
 database:
+  enabled: true
   host: localhost
   port: 5432
   database: crossview
@@ -12,6 +13,9 @@ database:
 
 # Server Configuration
 server:
+  admin:
+    username: admin
+    password: password
   port: 3001
   log:
     level: info  # Options: debug, info, warn, error, fatal, panic
@@ -27,7 +31,6 @@ server:
 
 # SSO Configuration (optional)
 sso:
-  enabled: false
   # OpenID Connect (OIDC) Configuration
   oidc:
     enabled: false

@@ -234,7 +234,7 @@ export const CompositeResources = () => {
     {
       header: 'Kind',
       accessor: 'kind',
-      minWidth: '200px',
+      minWidth: '120px',
     },
     {
       header: 'Synced',

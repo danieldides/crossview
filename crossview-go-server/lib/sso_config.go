@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/viper"
@@ -42,62 +41,101 @@ type SAMLConfig struct {
 }
 
 func GetSSOConfig(env Env) SSOConfig {
-	ssoEnabled := getEnvOrDefault("SSO_ENABLED", "")
-	if ssoEnabled == "" {
-		if viper.IsSet("sso.enabled") {
-			ssoEnabled = fmt.Sprintf("%v", viper.Get("sso.enabled"))
-		} else {
-			ssoEnabled = "false"
-		}
-	}
-	
-	enabled := ssoEnabled == "true"
-	
+	oidcEnabledStr := firstNonEmpty(
+		os.Getenv("OIDC_ENABLED"),
+		viper.GetString("sso.oidc.enabled"),
+	)
+	samlEnabledStr := firstNonEmpty(
+		os.Getenv("SAML_ENABLED"),
+		viper.GetString("sso.saml.enabled"),
+	)
+
+	oidcEnabled := oidcEnabledStr == "true"
+	samlEnabled := samlEnabledStr == "true"
+
+	// SSO is considered enabled if at least one provider is enabled
+	enabled := oidcEnabled || samlEnabled
+
 	return SSOConfig{
 		Enabled: enabled,
-		OIDC:    getOIDCConfig(env),
-		SAML:    getSAMLConfig(env),
+		OIDC:    getOIDCConfig(oidcEnabledStr),
+		SAML:    getSAMLConfig(samlEnabledStr),
 	}
 }
 
-func getOIDCConfig(env Env) OIDCConfig {
-	oidcEnabled := getEnvOrDefault("OIDC_ENABLED", "")
-	if oidcEnabled == "" {
-		if viper.IsSet("sso.oidc.enabled") {
-			oidcEnabled = fmt.Sprintf("%v", viper.Get("sso.oidc.enabled"))
-		} else {
-			oidcEnabled = "false"
-		}
-	}
-	
+func getOIDCConfig(enabledStr string) OIDCConfig {
 	return OIDCConfig{
-		Enabled:            oidcEnabled == "true",
-		Issuer:             getEnvOrDefault("OIDC_ISSUER", getConfigValue("sso.oidc.issuer", "", "http://localhost:8080/realms/crossview")),
-		ClientId:           getEnvOrDefault("OIDC_CLIENT_ID", getConfigValue("sso.oidc.clientId", "", "crossview-client")),
-		ClientSecret:       getEnvOrDefault("OIDC_CLIENT_SECRET", getConfigValue("sso.oidc.clientSecret", "", "")),
-		AuthorizationURL:   getEnvOrDefault("OIDC_AUTHORIZATION_URL", getConfigValue("sso.oidc.authorizationURL", "", "")),
-		TokenURL:           getEnvOrDefault("OIDC_TOKEN_URL", getConfigValue("sso.oidc.tokenURL", "", "")),
-		UserInfoURL:        getEnvOrDefault("OIDC_USERINFO_URL", getConfigValue("sso.oidc.userInfoURL", "", "")),
-		CallbackURL:        getEnvOrDefault("OIDC_CALLBACK_URL", getConfigValue("sso.oidc.callbackURL", "", "http://localhost:3001/api/auth/oidc/callback")),
-		Scope:              getEnvOrDefault("OIDC_SCOPE", getConfigValue("sso.oidc.scope", "", "openid profile email")),
-		UsernameAttribute:  getEnvOrDefault("OIDC_USERNAME_ATTRIBUTE", getConfigValue("sso.oidc.usernameAttribute", "", "preferred_username")),
-		EmailAttribute:     getEnvOrDefault("OIDC_EMAIL_ATTRIBUTE", getConfigValue("sso.oidc.emailAttribute", "", "email")),
-		FirstNameAttribute: getEnvOrDefault("OIDC_FIRSTNAME_ATTRIBUTE", getConfigValue("sso.oidc.firstNameAttribute", "", "given_name")),
-		LastNameAttribute:  getEnvOrDefault("OIDC_LASTNAME_ATTRIBUTE", getConfigValue("sso.oidc.lastNameAttribute", "", "family_name")),
+		Enabled: enabledStr == "true",
+		Issuer: firstNonEmpty(
+			os.Getenv("OIDC_ISSUER"),
+			viper.GetString("sso.oidc.issuer"),
+			"http://localhost:8080/realms/crossview",
+		),
+		ClientId: firstNonEmpty(
+			os.Getenv("OIDC_CLIENT_ID"),
+			viper.GetString("sso.oidc.clientId"),
+			"crossview-client",
+		),
+		ClientSecret: firstNonEmpty(
+			os.Getenv("OIDC_CLIENT_SECRET"),
+			viper.GetString("sso.oidc.clientSecret"),
+			"",
+		),
+		AuthorizationURL: firstNonEmpty(
+			os.Getenv("OIDC_AUTHORIZATION_URL"),
+			viper.GetString("sso.oidc.authorizationURL"),
+			"",
+		),
+		TokenURL: firstNonEmpty(
+			os.Getenv("OIDC_TOKEN_URL"),
+			viper.GetString("sso.oidc.tokenURL"),
+			"",
+		),
+		UserInfoURL: firstNonEmpty(
+			os.Getenv("OIDC_USERINFO_URL"),
+			viper.GetString("sso.oidc.userInfoURL"),
+			"",
+		),
+		CallbackURL: firstNonEmpty(
+			os.Getenv("OIDC_CALLBACK_URL"),
+			viper.GetString("sso.oidc.callbackURL"),
+			"http://localhost:3001/api/auth/oidc/callback",
+		),
+		Scope: firstNonEmpty(
+			os.Getenv("OIDC_SCOPE"),
+			viper.GetString("sso.oidc.scope"),
+			"openid profile email",
+		),
+		UsernameAttribute: firstNonEmpty(
+			os.Getenv("OIDC_USERNAME_ATTRIBUTE"),
+			viper.GetString("sso.oidc.usernameAttribute"),
+			"preferred_username",
+		),
+		EmailAttribute: firstNonEmpty(
+			os.Getenv("OIDC_EMAIL_ATTRIBUTE"),
+			viper.GetString("sso.oidc.emailAttribute"),
+			"email",
+		),
+		FirstNameAttribute: firstNonEmpty(
+			os.Getenv("OIDC_FIRSTNAME_ATTRIBUTE"),
+			viper.GetString("sso.oidc.firstNameAttribute"),
+			"given_name",
+		),
+		LastNameAttribute: firstNonEmpty(
+			os.Getenv("OIDC_LASTNAME_ATTRIBUTE"),
+			viper.GetString("sso.oidc.lastNameAttribute"),
+			"family_name",
+		),
 	}
 }
 
-func getSAMLConfig(env Env) SAMLConfig {
-	samlEnabled := getEnvOrDefault("SAML_ENABLED", "")
-	if samlEnabled == "" {
-		if viper.IsSet("sso.saml.enabled") {
-			samlEnabled = fmt.Sprintf("%v", viper.Get("sso.saml.enabled"))
-		} else {
-			samlEnabled = "false"
-		}
-	}
-	
-	cert := getEnvOrDefault("SAML_CERT", getConfigValue("sso.saml.cert", "", ""))
+func getSAMLConfig(enabledStr string) SAMLConfig {
+	cert := firstNonEmpty(
+		os.Getenv("SAML_CERT"),
+		viper.GetString("sso.saml.cert"),
+		"",
+	)
+
 	if cert != "" {
 		if _, err := os.Stat(cert); err == nil {
 			if certBytes, err := os.ReadFile(cert); err == nil {
@@ -105,17 +143,44 @@ func getSAMLConfig(env Env) SAMLConfig {
 			}
 		}
 	}
-	
+
 	return SAMLConfig{
-		Enabled:            samlEnabled == "true",
-		EntryPoint:         getEnvOrDefault("SAML_ENTRY_POINT", getConfigValue("sso.saml.entryPoint", "", "http://localhost:8080/realms/crossview/protocol/saml")),
-		Issuer:             getEnvOrDefault("SAML_ISSUER", getConfigValue("sso.saml.issuer", "", "crossview")),
-		Cert:               cert,
-		CallbackURL:        getEnvOrDefault("SAML_CALLBACK_URL", getConfigValue("sso.saml.callbackURL", "", "http://localhost:3001/api/auth/saml/callback")),
-		UsernameAttribute:  getEnvOrDefault("SAML_USERNAME_ATTRIBUTE", getConfigValue("sso.saml.usernameAttribute", "", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")),
-		EmailAttribute:     getEnvOrDefault("SAML_EMAIL_ATTRIBUTE", getConfigValue("sso.saml.emailAttribute", "", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")),
-		FirstNameAttribute: getEnvOrDefault("SAML_FIRSTNAME_ATTRIBUTE", getConfigValue("sso.saml.firstNameAttribute", "", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")),
-		LastNameAttribute:  getEnvOrDefault("SAML_LASTNAME_ATTRIBUTE", getConfigValue("sso.saml.lastNameAttribute", "", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")),
+		Enabled: enabledStr == "true",
+		EntryPoint: firstNonEmpty(
+			os.Getenv("SAML_ENTRY_POINT"),
+			viper.GetString("sso.saml.entryPoint"),
+			"http://localhost:8080/realms/crossview/protocol/saml",
+		),
+		Issuer: firstNonEmpty(
+			os.Getenv("SAML_ISSUER"),
+			viper.GetString("sso.saml.issuer"),
+			"crossview",
+		),
+		Cert: cert,
+		CallbackURL: firstNonEmpty(
+			os.Getenv("SAML_CALLBACK_URL"),
+			viper.GetString("sso.saml.callbackURL"),
+			"http://localhost:3001/api/auth/saml/callback",
+		),
+		UsernameAttribute: firstNonEmpty(
+			os.Getenv("SAML_USERNAME_ATTRIBUTE"),
+			viper.GetString("sso.saml.usernameAttribute"),
+			"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+		),
+		EmailAttribute: firstNonEmpty(
+			os.Getenv("SAML_EMAIL_ATTRIBUTE"),
+			viper.GetString("sso.saml.emailAttribute"),
+			"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+		),
+		FirstNameAttribute: firstNonEmpty(
+			os.Getenv("SAML_FIRSTNAME_ATTRIBUTE"),
+			viper.GetString("sso.saml.firstNameAttribute"),
+			"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+		),
+		LastNameAttribute: firstNonEmpty(
+			os.Getenv("SAML_LASTNAME_ATTRIBUTE"),
+			viper.GetString("sso.saml.lastNameAttribute"),
+			"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname",
+		),
 	}
 }
-

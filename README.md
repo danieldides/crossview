@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/Join%20Crossview%20on%20Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white" alt="Join on Slack"/>
   </a>
   
-[![GitHub stars](https://img.shields.io/github/stars/corpobit/crossview?style=social)](https://github.com/corpobit/crossview)
+[![GitHub stars](https://img.shields.io/github/stars/crossplane-contrib/crossview?style=social)](https://github.com/crossplane-contrib/crossview)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
   [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/crossview)](https://artifacthub.io/packages/search?repo=crossview)
 </div>
@@ -19,7 +19,7 @@
 
 ### Demo Video
 
-📹 [Watch Demo Video](https://github.com/corpobit/crossview/raw/main/public/images/demo-video.mov)
+📹 [Watch Demo Video](https://github.com/crossplane-contrib/crossview/raw/main/public/images/demo-video.mov)
 
 ## Table of Contents
 
@@ -196,7 +196,7 @@ For more details, see:
 ### Build the Docker Image
 
 ```bash
-docker build -t ghcr.io/corpobit/crossview:latest .
+docker build -t ghcr.io/crossplane-contrib/crossview:latest .
 ```
 
 Images are automatically published to both GHCR (default) and Docker Hub (fallback) on each release.
@@ -215,7 +215,7 @@ docker run -p 3001:3001 \
   -e KUBECONFIG=/app/.kube/config \
   -e SESSION_SECRET=your-secret-key-here \
   -v ~/.kube/config:/app/.kube/config:ro \
-  ghcr.io/corpobit/crossview:latest
+  ghcr.io/crossplane-contrib/crossview:latest
 ```
 
 ### Run with Config File
@@ -227,7 +227,7 @@ docker run -p 3001:3001 \
   -v $(pwd)/config/config.yaml:/app/config/config.yaml:ro \
   -e KUBECONFIG=/app/.kube/config \
   -v ~/.kube/config:/app/.kube/config:ro \
-  ghcr.io/corpobit/crossview:latest
+  ghcr.io/crossplane-contrib/crossview:latest
 ```
 
 ### Run with Docker Compose

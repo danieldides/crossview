@@ -266,7 +266,7 @@ When reporting issues, include:
 
 ### Community Support
 
-- GitHub Issues: https://github.com/corpobit/crossview/issues
+- GitHub Issues: https://github.com/crossplane-contrib/crossview/issues
 - Check existing issues for similar problems
 - Provide detailed information when creating new issues
 

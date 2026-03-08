@@ -168,7 +168,7 @@ export class SearchResourcesUseCase {
   getReadyResources(resources) {
     return resources.filter(resource => {
       const conditions = resource.conditions || [];
-      const readyCondition = conditions.find(c => c.type === 'Ready' || c.type === 'Synced');
+      const readyCondition = conditions.find(c => c.type === 'Ready');
       return readyCondition?.status === 'True';
     });
   }

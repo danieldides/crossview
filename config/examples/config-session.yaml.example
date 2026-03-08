@@ -1,5 +1,5 @@
-
 database:
+  enabled: true
   host: localhost
   port: 8920
   database: crossview
@@ -7,6 +7,9 @@ database:
   password: password
 
 server:
+  admin:
+    username: admin
+    password: password
   port: 3001
   auth:
     mode: "session"

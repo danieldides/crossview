@@ -70,27 +70,17 @@ spec:
                 configMapKeyRef:
                   name: {{ include "crossview.configMapName" . }}
                   key: DB_USER
-            {{- $dbPasswordValueFrom := include "crossview.secretValueFrom" (dict "secret" .Values.secrets.dbPassword "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "db-password") }}
-            {{- if or .Values.secrets.existingSecret (and .Values.secrets.dbPassword (ne $dbPasswordValueFrom "")) }}
+            {{- $dbPassSecret := .Values.secrets.dbPassword | default dict }}
+            {{- $dbPasswordValueFrom := include "crossview.secretValueFrom" (dict "secret" $dbPassSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "dbpassword") }}
+            {{- if $dbPasswordValueFrom }}
             - name: DB_PASS
-              {{- if .Values.secrets.existingSecret }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secrets.existingSecret }}
-                  key: {{ .Values.secrets.existingSecretKeys.dbPassword }}
-              {{- else if (ne $dbPasswordValueFrom "") }}
               {{- $dbPasswordValueFrom | nindent 14 }}
-              {{- end }}
             {{- end }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ if .Values.image.tag }}{{ .Values.image.tag }}{{ else }}{{ .Chart.AppVersion }}{{ end }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.image.platform }}
-          # Note: Platform selection via runtimeClassName or nodeSelector may be needed
-          # For ARM64 hosts running amd64 images, ensure your cluster supports emulation
-          {{- end }}
           {{- with .Values.app.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -100,6 +90,11 @@ spec:
               containerPort: {{ .Values.app.port }}
               protocol: TCP
           env:
+            - name: DB_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "crossview.configMapName" . }}
+                  key: DB_ENABLED
             - name: DB_HOST
               valueFrom:
                 configMapKeyRef:
@@ -155,11 +150,6 @@ spec:
                 configMapKeyRef:
                   name: {{ include "crossview.configMapName" . }}
                   key: AUTH_DEFAULT_ROLE
-            - name: SSO_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "crossview.configMapName" . }}
-                  key: SSO_ENABLED
             - name: OIDC_ENABLED
               valueFrom:
                 configMapKeyRef:
@@ -175,11 +165,12 @@ spec:
                 configMapKeyRef:
                   name: {{ include "crossview.configMapName" . }}
                   key: OIDC_CLIENT_ID
+            {{- $oidcSecret := .Values.secrets.OIDCClientSecret | default dict }}
+            {{- $oidcClientSecretValueFrom := include "crossview.secretValueFrom" (dict "secret" $oidcSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "oidcclientsecret") }}
+            {{- if $oidcClientSecretValueFrom }}
             - name: OIDC_CLIENT_SECRET
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "crossview.configMapName" . }}
-                  key: OIDC_CLIENT_SECRET
+              {{- $oidcClientSecretValueFrom | nindent 14 }}
+            {{- end }}
             - name: OIDC_AUTHORIZATION_URL
               valueFrom:
                 configMapKeyRef:
@@ -240,11 +231,12 @@ spec:
                 configMapKeyRef:
                   name: {{ include "crossview.configMapName" . }}
                   key: SAML_ISSUER
+            {{- $samlCertSecret := .Values.secrets.SAMLCert | default dict }}
+            {{- $samlCertValueFrom := include "crossview.secretValueFrom" (dict "secret" $samlCertSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "samlcert") }}
+            {{- if $samlCertValueFrom }}
             - name: SAML_CERT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "crossview.configMapName" . }}
-                  key: SAML_CERT
+              {{- $samlCertValueFrom | nindent 14 }}
+            {{- end }}
             - name: SAML_CALLBACK_URL
               valueFrom:
                 configMapKeyRef:
@@ -270,29 +262,29 @@ spec:
                 configMapKeyRef:
                   name: {{ include "crossview.configMapName" . }}
                   key: SAML_LASTNAME_ATTRIBUTE
-            {{- $dbPasswordValueFrom := include "crossview.secretValueFrom" (dict "secret" .Values.secrets.dbPassword "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "db-password") }}
-            {{- $sessionSecretValueFrom := include "crossview.secretValueFrom" (dict "secret" .Values.secrets.sessionSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "session-secret") }}
-            {{- if or .Values.secrets.existingSecret (and .Values.secrets.dbPassword (ne $dbPasswordValueFrom "")) }}
+            {{- $dbPassSecret := .Values.secrets.dbPassword | default dict }}
+            {{- $dbPasswordValueFrom := include "crossview.secretValueFrom" (dict "secret" $dbPassSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "dbpassword") }}
+            {{- if $dbPasswordValueFrom }}
             - name: DB_PASS
-              {{- if .Values.secrets.existingSecret }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secrets.existingSecret }}
-                  key: {{ .Values.secrets.existingSecretKeys.dbPassword }}
-              {{- else if (ne $dbPasswordValueFrom "") }}
               {{- $dbPasswordValueFrom | nindent 14 }}
-              {{- end }}
             {{- end }}
-            {{- if or .Values.secrets.existingSecret (and .Values.secrets.sessionSecret (ne $sessionSecretValueFrom "")) }}
+            {{- $adminUserSecret := .Values.secrets.adminUsername | default dict }}
+            {{- $adminUsernameValueFrom := include "crossview.secretValueFrom" (dict "secret" $adminUserSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "adminusername") }}
+            {{- if $adminUsernameValueFrom }}
+            - name: ADMIN_USERNAME
+              {{- $adminUsernameValueFrom | nindent 14 }}
+            {{- end }}
+            {{- $adminPassSecret := .Values.secrets.adminPassword | default dict }}
+            {{- $adminPasswordValueFrom := include "crossview.secretValueFrom" (dict "secret" $adminPassSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "adminpassword") }}
+            {{- if $adminPasswordValueFrom }}
+            - name: ADMIN_PASSWORD
+              {{- $adminPasswordValueFrom | nindent 14 }}
+            {{- end }}
+            {{- $sessionSecretSecret := .Values.secrets.sessionSecret | default dict }}
+            {{- $sessionSecretValueFrom := include "crossview.secretValueFrom" (dict "secret" $sessionSecretSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "sessionsecret") }}
+            {{- if $sessionSecretValueFrom }}
             - name: SESSION_SECRET
-              {{- if .Values.secrets.existingSecret }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secrets.existingSecret }}
-                  key: {{ .Values.secrets.existingSecretKeys.sessionSecret }}
-              {{- else if (ne $sessionSecretValueFrom "") }}
               {{- $sessionSecretValueFrom | nindent 14 }}
-              {{- end }}
             {{- end }}
             {{- with .Values.app.extraEnv }}
             {{- toYaml . | nindent 12 }}
@@ -325,4 +317,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-

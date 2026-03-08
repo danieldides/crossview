@@ -514,7 +514,7 @@ export const Sidebar = ({ onToggle, onResize }) => {
               >
                 Open-source project maintained by{' '}
                 <Text as="span" fontWeight="semibold" color={getTextColor(colorMode, 'primary')} _dark={{ color: getTextColor('dark', 'primary') }}>
-                  Corpobit
+                  Crossplane Contributors
                 </Text>
                 </Text>
               <Box

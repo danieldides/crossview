@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"crossview-go-server/lib"
 	"crossview-go-server/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
@@ -88,10 +89,10 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 	c.logger.Infof("User created successfully: userId=%d, username=%s, email=%s, role=%s", user.ID, user.Username, user.Email, user.Role)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"role":     user.Role,
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"role":       user.Role,
 		"created_at": user.CreatedAt,
 	})
 }
@@ -169,12 +170,11 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 	c.logger.Infof("User updated successfully: userId=%d, username=%s, email=%s, role=%s", user.ID, user.Username, user.Email, user.Role)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"role":     user.Role,
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"role":       user.Role,
 		"created_at": user.CreatedAt,
 		"updated_at": user.UpdatedAt,
 	})
 }
-

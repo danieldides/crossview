@@ -54,11 +54,14 @@ tests:
                 name: existing-configmap
                 key: DB_HOST
 
-  - it: should inject secrets from chart-created secret
+  - it: should inject secrets from chart-created secret (plain strings)
     set:
       secrets:
         dbPassword: my-db-password
         sessionSecret: my-session-secret
+        OIDCClientSecret: my-oidc-secret
+        adminUsername: test-admin
+        adminPassword: test-admin-pass
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
@@ -67,7 +70,7 @@ tests:
             valueFrom:
               secretKeyRef:
                 name: RELEASE-NAME-crossview-secrets
-                key: db-password
+                key: dbpassword
       - contains:
           path: spec.template.spec.containers[0].env
           content:
@@ -75,15 +78,47 @@ tests:
             valueFrom:
               secretKeyRef:
                 name: RELEASE-NAME-crossview-secrets
-                key: session-secret
+                key: sessionsecret
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OIDC_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-crossview-secrets
+                key: oidcclientsecret
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ADMIN_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-crossview-secrets
+                key: adminusername
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-crossview-secrets
+                key: adminpassword
 
-  - it: should inject secrets from existing secret
+  - it: should inject secrets from external secrets (secretKeyRef)
     set:
       secrets:
-        existingSecret: my-existing-secret
-        existingSecretKeys:
-          dbPassword: db-password-key
-          sessionSecret: session-secret-key
+        dbPassword:
+          secretKeyRef:
+            name: my-prod-db
+            key: db-pass-key
+        sessionSecret:
+          secretKeyRef:
+            name: my-prod-session
+            key: session-key
+        OIDCClientSecret:
+          secretKeyRef:
+            name: my-oidc
+            key: client-secret-key
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
@@ -91,16 +126,24 @@ tests:
             name: DB_PASS
             valueFrom:
               secretKeyRef:
-                name: my-existing-secret
-                key: db-password-key
+                name: my-prod-db
+                key: db-pass-key
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: SESSION_SECRET
             valueFrom:
               secretKeyRef:
-                name: my-existing-secret
-                key: session-secret-key
+                name: my-prod-session
+                key: session-key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OIDC_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: my-oidc
+                key: client-secret-key
 
   - it: should not mount config volume (no file mounting)
     set:
@@ -141,4 +184,3 @@ tests:
               configMapKeyRef:
                 name: RELEASE-NAME-crossview-config
                 key: DB_PORT
-

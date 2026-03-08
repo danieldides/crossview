@@ -85,9 +85,6 @@ tests:
           path: data.LOG_LEVEL
           value: "info"
       - equal:
-          path: data.SSO_ENABLED
-          value: "false"
-      - equal:
           path: data.OIDC_ENABLED
           value: "false"
       - equal:
@@ -135,9 +132,6 @@ tests:
       - equal:
           path: data.CORS_ORIGIN
           value: "http://example.com"
-      - equal:
-          path: data.SSO_ENABLED
-          value: "true"
       - equal:
           path: data.OIDC_ENABLED
           value: "true"

@@ -11,7 +11,7 @@ Thank you for your interest in contributing to Crossview. This guide will help y
    ```bash
    git clone https://github.com/YOUR_USERNAME/crossview.git
    cd crossview
-   git remote add upstream https://github.com/corpobit/crossview.git
+   git remote add upstream https://github.com/crossplane-contrib/crossview.git
    ```
 3. Create a branch for your work:
    ```bash
@@ -44,7 +44,7 @@ See [Getting Started](GETTING_STARTED.md) and [Configuration](CONFIGURATION.md) 
 
 ### Reporting Issues
 
-- Use the [GitHub issue tracker](https://github.com/corpobit/crossview/issues).
+- Use the [GitHub issue tracker](https://github.com/crossplane-contrib/crossview/issues).
 - For bugs: describe steps to reproduce, expected vs actual behavior, and environment (OS, Node/Go versions, Kubernetes version).
 - For feature ideas: check existing issues first; open a Discussion or Issue to propose or discuss.
 

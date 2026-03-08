@@ -46,18 +46,11 @@ spec:
               value: {{ .Values.config.database.database | quote }}
             - name: POSTGRES_USER
               value: {{ .Values.config.database.username | quote }}
-            {{- if .Values.secrets.existingSecret }}
+            {{- $dbPassSecret := .Values.secrets.dbPassword | default dict }}
+            {{- $dbPasswordValueFrom := include "crossview.secretValueFrom" (dict "secret" $dbPassSecret "secretName" (printf "%s-secrets" (include "crossview.fullname" .)) "secretKey" "dbpassword") }}
+            {{- if $dbPasswordValueFrom }}
             - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secrets.existingSecret }}
-                  key: {{ .Values.secrets.existingSecretKeys.dbPassword }}
-            {{- else if .Values.secrets.dbPassword }}
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "crossview.fullname" . }}-secrets
-                  key: db-password
+              {{- $dbPasswordValueFrom | nindent 14 }}
             {{- end }}
             {{- if .Values.database.persistence.enabled }}
             - name: PGDATA
@@ -112,9 +105,9 @@ metadata:
   labels:
     {{- include "crossview.labels" . | nindent 4 }}
     app.kubernetes.io/component: postgres
-  {{- with .Values.database.service.annotations }}
+  {{- if and .Values.database.service (hasKey .Values.database.service "annotations") }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml .Values.database.service.annotations | nindent 4 }}
   {{- end }}
 spec:
   type: ClusterIP
@@ -144,4 +137,3 @@ spec:
       storage: {{ .Values.database.persistence.size }}
 {{- end }}
 {{- end }}
-

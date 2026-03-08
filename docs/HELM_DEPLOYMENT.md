@@ -14,7 +14,7 @@ Deploy Crossview using Helm for the easiest and most flexible installation.
 
 ```bash
 # Install directly from GHCR OCI registry (recommended - no repo add needed)
-helm install crossview oci://ghcr.io/corpobit/crossview-chart \
+helm install crossview oci://ghcr.io/crossplane-contrib/crossview-chart \
   --version v1.6.0 \
   --namespace crossview \
   --create-namespace \
@@ -26,7 +26,7 @@ Alternatively, install from Docker Hub OCI registry (fallback):
 
 ```bash
 # Install directly from Docker Hub OCI registry
-helm install crossview oci://docker.io/corpobit/crossview-chart \
+helm install crossview oci://docker.io/crossplane-contrib/crossview-chart \
   --version v1.6.0 \
   --namespace crossview \
   --create-namespace \
@@ -134,7 +134,7 @@ helm install crossview crossview/crossview \
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image.repository` | Docker image repository | `ghcr.io/corpobit/crossview` |
+| `image.repository` | Docker image repository | `ghcr.io/crossplane-contrib/crossview` |
 | `image.tag` | Docker image tag | `latest` |
 | `app.replicas` | Number of replicas | `3` |
 | `service.type` | Service type | `LoadBalancer` |
@@ -228,7 +228,7 @@ Or upgrade from OCI registry:
 
 ```bash
 # Upgrade from OCI registry (no repo update needed)
-helm upgrade crossview oci://ghcr.io/corpobit/crossview-chart \
+helm upgrade crossview oci://ghcr.io/crossplane-contrib/crossview-chart \
   --version v1.6.0 \
   --namespace crossview \
   --set image.tag=v1.6.0 \

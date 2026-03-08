@@ -8,13 +8,9 @@ global:
 
 # Image configuration
 image:
-  repository: ghcr.io/corpobit/crossview
+  repository: ghcr.io/crossplane-contrib/crossview
   pullPolicy: Always
-  # Overrides the image tag. If empty, uses Chart.AppVersion (e.g., "1.5.0").
-  # To pin to a specific version, set this to the version tag (e.g., "1.5.0" or "v1.5.0")
-  # Alternative: Use Docker Hub by setting repository to "corpobit/crossview"
   tag: ""
-  # Platform override for multi-arch support (e.g., "linux/amd64" for ARM64 hosts)
   platform: ""
 
 # Application configuration
@@ -92,16 +88,12 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: crossview.example.com
       paths:
         - path: /
           pathType: Prefix
   tls: []
-    # - secretName: crossview-tls
-    #   hosts:
-    #     - crossview.example.com
 
 # Database configuration
 database:
@@ -121,11 +113,6 @@ database:
     size: 10Gi
     accessMode: ReadWriteOnce
     storageClass: ""
-  podAnnotations: {}
-  podLabels: {}
-  service:
-    annotations: {}
-  extraEnv: []
   securityContext:
     runAsNonRoot: true
     runAsUser: 999
@@ -142,69 +129,62 @@ database:
         - ALL
 
 # Configuration
-# If config.ref is set, the chart will use an existing ConfigMap (must contain 'config.yaml' key)
-# If config.ref is not set, the chart will generate config.yaml from the config section below
 config:
-  # Reference to an existing ConfigMap (if set, ConfigMap creation is skipped)
-  # The existing ConfigMap should contain a 'config.yaml' key with the full configuration file
-  ref: ""  # Set to your ConfigMap name, e.g., "my-crossview-config"
-  
-  # Configuration structure (matches config.yaml.example)
-  # Only used if config.ref is not set
+  ref: ""
   database:
-    host: ""  # Empty means auto-detect: {{ include "crossview.fullname" . }}-postgres
+    enabled: true
+    host: ""
     port: 5432
     database: crossview
     username: postgres
-    # password is set from secrets.dbPassword
-  
   server:
     port: 3001
     auth:
-      mode: none  # none | session | header (header/none: no database required)
-      header:
-        trustedHeader: X-Auth-User
-        createUsers: true
-        defaultRole: viewer
+      mode: session
+      trustedHeader: X-Auth-User
+      createUsers: true
+      defaultRole: viewer
     log:
-      level: info  # Options: debug, info, warn, error, fatal, panic
+      level: info
     cors:
       origin: http://localhost:5173
       credentials: true
     session:
-      # secret is set from secrets.sessionSecret
       cookie:
         secure: false
         httpOnly: true
-        maxAge: 86400000  # 24 hours in milliseconds
-  
+        maxAge: 86400000
+
+  # SSO configuration (example values provided, but SSO is disabled by default)
+  # sso:
+  #   oidc:
+  #     enabled: true
+  #     issuer: http://localhost:8080/realms/crossview
+  #     clientId: crossview-client
+  #     authorizationURL: ""
+  #     tokenURL: ""
+  #     userInfoURL: ""
+  #     callbackURL: http://localhost:3001/api/auth/oidc/callback
+  #     scope: openid profile email
+  #     usernameAttribute: preferred_username
+  #     emailAttribute: email
+  #     firstNameAttribute: given_name
+  #     lastNameAttribute: family_name
+  #   saml:
+  #     enabled: true
+  #     entryPoint: http://localhost:8080/realms/crossview/protocol/saml
+  #     issuer: crossview
+  #     callbackURL: http://localhost:3001/api/auth/saml/callback
+  #     usernameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+  #     emailAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+  #     firstNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname
+  #     lastNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname
   sso:
-    enabled: false
     oidc:
       enabled: false
-      issuer: http://localhost:8080/realms/crossview
-      clientId: crossview-client
-      clientSecret: ""
-      authorizationURL: ""
-      tokenURL: ""
-      userInfoURL: ""
-      callbackURL: http://localhost:3001/api/auth/oidc/callback
-      scope: openid profile email
-      usernameAttribute: preferred_username
-      emailAttribute: email
-      firstNameAttribute: given_name
-      lastNameAttribute: family_name
     saml:
       enabled: false
-      entryPoint: http://localhost:8080/realms/crossview/protocol/saml
-      issuer: crossview
-      cert: null
-      callbackURL: http://localhost:3001/api/auth/saml/callback
-      usernameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
-      emailAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
-      firstNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname
-      lastNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname
-  
+
   vite:
     server:
       proxy:
@@ -212,18 +192,30 @@ config:
           target: http://localhost:3001
           changeOrigin: true
 
-# Secrets (should be set via --set or secrets file)
-# Each secret can be:
-#   - A string: Direct value (creates a secret)
-#   - An object with secretKeyRef: Reference to existing secret
-#   - An object with configMapKeyRef: Reference to existing configmap
+# Secrets configuration
+# - Plain string: chart creates a secret with that value
+# - Object with secretKeyRef: references an existing secret (no creation)
 secrets:
-  dbPassword: ""  # String value OR object: {secretKeyRef: {name: "my-secret", key: "password"}} OR {configMapKeyRef: {name: "my-config", key: "password"}}
-  sessionSecret: ""  # String value OR object: {secretKeyRef: {name: "my-secret", key: "session"}} OR {configMapKeyRef: {name: "my-config", key: "session"}}
-  existingSecret: ""  # DEPRECATED: Use dbPassword/sessionSecret as objects instead
-  existingSecretKeys:
-    dbPassword: "db-password"  # DEPRECATED: Use dbPassword as object instead
-    sessionSecret: "session-secret"  # DEPRECATED: Use sessionSecret as object instead
+  adminUsername: ""
+  adminPassword: ""
+  dbPassword: ""
+  sessionSecret: ""
+  OIDCClientSecret: ""
+  SAMLCert: ""
+
+  # Production override example: use existing secrets instead of chart-created ones
+  # dbPassword:
+  #   secretKeyRef:
+  #     name: prod-crossview-secrets
+  #     key: db-password
+  # sessionSecret:
+  #   secretKeyRef:
+  #     name: prod-crossview-secrets
+  #     key: session-secret
+  # OIDCClientSecret:
+  #   secretKeyRef:
+  #     name: oidc-credentials
+  #     key: client-secret
 
 # Service Account
 serviceAccount:
@@ -265,3 +257,7 @@ podAnnotations: {}
 # Pod labels (applied to app pods)
 podLabels: {}
 
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10

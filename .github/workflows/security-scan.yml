@@ -81,7 +81,7 @@ jobs:
       - name: Scan application Docker image (latest)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'corpobit/crossview:latest'
+          image-ref: 'crossplane-contrib/crossview:latest'
           format: 'table'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'

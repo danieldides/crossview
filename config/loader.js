@@ -36,6 +36,7 @@ export const loadConfig = (configPath = null) => {
 
   config = {
     database: {
+      enabled: process.env.DB_ENABLED === 'true' || fileConfig.database?.enabled === true,
       host: process.env.DB_HOST || fileConfig.database?.host || 'localhost',
       port: parseInt(process.env.DB_PORT || fileConfig.database?.port || '5432', 10),
       database: process.env.DB_NAME || fileConfig.database?.database || 'crossview',

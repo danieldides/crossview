@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
 	"crossview-go-server/bootstrap"
-	
+	"os"
+
 	// Import OIDC auth provider for Kubernetes client
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )

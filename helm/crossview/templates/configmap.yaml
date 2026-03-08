@@ -13,6 +13,7 @@ data:
 {{- end }}
   DB_HOST: {{ $dbHost | quote }}
   DB_PORT: {{ .Values.config.database.port | default 5432 | quote }}
+  DB_ENABLED: {{ .Values.config.database.enabled | default false | quote }}
   DB_NAME: {{ .Values.config.database.database | default "crossview" | quote }}
   DB_USER: {{ .Values.config.database.username | default "postgres" | quote }}
   PORT: {{ .Values.config.server.port | default 3001 | quote }}
@@ -24,11 +25,9 @@ data:
   AUTH_DEFAULT_ROLE: {{ $authHeader.defaultRole | default "viewer" | quote }}
   LOG_LEVEL: {{ .Values.config.server.log.level | default "info" | quote }}
   CORS_ORIGIN: {{ .Values.config.server.cors.origin | default "http://localhost:5173" | quote }}
-  SSO_ENABLED: {{ .Values.config.sso.enabled | default false | quote }}
   OIDC_ENABLED: {{ .Values.config.sso.oidc.enabled | default false | quote }}
   OIDC_ISSUER: {{ .Values.config.sso.oidc.issuer | default "http://localhost:8080/realms/crossview" | quote }}
   OIDC_CLIENT_ID: {{ .Values.config.sso.oidc.clientId | default "crossview-client" | quote }}
-  OIDC_CLIENT_SECRET: {{ .Values.config.sso.oidc.clientSecret | default "" | quote }}
   OIDC_AUTHORIZATION_URL: {{ .Values.config.sso.oidc.authorizationURL | default "" | quote }}
   OIDC_TOKEN_URL: {{ .Values.config.sso.oidc.tokenURL | default "" | quote }}
   OIDC_USERINFO_URL: {{ .Values.config.sso.oidc.userInfoURL | default "" | quote }}
@@ -41,7 +40,6 @@ data:
   SAML_ENABLED: {{ .Values.config.sso.saml.enabled | default false | quote }}
   SAML_ENTRY_POINT: {{ .Values.config.sso.saml.entryPoint | default "http://localhost:8080/realms/crossview/protocol/saml" | quote }}
   SAML_ISSUER: {{ .Values.config.sso.saml.issuer | default "crossview" | quote }}
-  SAML_CERT: {{ .Values.config.sso.saml.cert | default "" | quote }}
   SAML_CALLBACK_URL: {{ .Values.config.sso.saml.callbackURL | default "http://localhost:3001/api/auth/saml/callback" | quote }}
   SAML_USERNAME_ATTRIBUTE: {{ .Values.config.sso.saml.usernameAttribute | default "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" | quote }}
   SAML_EMAIL_ATTRIBUTE: {{ .Values.config.sso.saml.emailAttribute | default "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" | quote }}

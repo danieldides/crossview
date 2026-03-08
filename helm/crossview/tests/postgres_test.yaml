@@ -2,7 +2,7 @@ suite: test postgres deployment
 templates:
   - postgres.yaml
 tests:
-  - it: should use database config values
+  - it: should use database config values (plain secret)
     set:
       secrets:
         dbPassword: test-password
@@ -22,6 +22,34 @@ tests:
           content:
             name: POSTGRES_USER
             value: "postgres"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-crossview-secrets
+                key: dbpassword
+
+  - it: should use external secret for dbPassword
+    set:
+      secrets:
+        dbPassword:
+          secretKeyRef:
+            name: my-prod-db
+            key: db-pass-key
+        sessionSecret: test-secret
+    template: postgres.yaml
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-prod-db
+                key: db-pass-key
 
   - it: should use direct values when config.ref is set
     set:
@@ -43,4 +71,3 @@ tests:
           content:
             name: POSTGRES_USER
             value: "postgres"
-

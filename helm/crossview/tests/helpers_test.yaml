@@ -44,4 +44,3 @@ tests:
       - equal:
           path: metadata.namespace
           value: my-namespace
-

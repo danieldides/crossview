@@ -13,7 +13,7 @@ type Database struct {
 }
 
 func NewDatabase(env Env, logger Logger) Database {
-	if env.AuthMode == "header" || env.AuthMode == "none" {
+	if env.AuthMode == "header" || env.AuthMode == "none" || !env.DBEnabled {
 		logger.Info("Skipping database connection (auth mode is " + env.AuthMode + ")")
 		return Database{DB: nil}
 	}

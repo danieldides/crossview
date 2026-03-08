@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - pre-release
     paths-ignore:
       - 'README.md'
       - 'docs/**'
@@ -45,6 +46,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     permissions:
       contents: write
       packages: write
@@ -94,80 +96,56 @@ jobs:
         id: version
         run: |
           git fetch --tags --force
-          
-          LATEST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "")
-          echo "Latest tag found: $LATEST_TAG"
-          
-          if [ -z "$LATEST_TAG" ]; then
-            NEW_VERSION="0.1.0"
-            echo "No previous tags found, starting at 0.1.0"
+          BRANCH="${GITHUB_REF##*/}"
+
+          LATEST_STABLE=$(git tag --list "v*" | grep -v "-" | sort -V | tail -n1)
+          echo "Latest stable tag: $LATEST_STABLE"
+
+          if [ -z "$LATEST_STABLE" ]; then
+            BASE_VERSION="0.1.0"
           else
-            VERSION=${LATEST_TAG#v}
+            VERSION=${LATEST_STABLE#v}
             MAJOR=$(echo $VERSION | cut -d. -f1)
             MINOR=$(echo $VERSION | cut -d. -f2)
             PATCH=$(echo $VERSION | cut -d. -f3)
-            
-            if [ -z "$PATCH" ]; then
-              PATCH=0
-            fi
-            
-            echo "Parsed version: MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
-            
+
             if [ "$MAJOR" = "0" ]; then
               if [ "$MINOR" -lt 9 ]; then
-                NEW_MINOR=$((MINOR + 1))
-                NEW_VERSION="0.$NEW_MINOR.0"
-                echo "Incrementing minor version: 0.$NEW_MINOR.0"
+                BASE_VERSION="0.$((MINOR+1)).0"
               else
-                NEW_VERSION="1.0.0"
-                echo "Jumping from 0.9.0 to 1.0.0"
+                BASE_VERSION="1.0.0"
               fi
             else
               if [ "$MINOR" -lt 9 ]; then
-              NEW_MINOR=$((MINOR + 1))
-              NEW_VERSION="$MAJOR.$NEW_MINOR.0"
-                echo "Incrementing minor version in $MAJOR.x series: $NEW_VERSION"
+                BASE_VERSION="$MAJOR.$((MINOR+1)).0"
               else
-                NEW_MAJOR=$((MAJOR + 1))
-                NEW_VERSION="$NEW_MAJOR.0.0"
-                echo "Jumping from $MAJOR.9.0 to $NEW_VERSION"
+                BASE_VERSION="$((MAJOR+1)).0.0"
               fi
             fi
-            while git rev-parse "v$NEW_VERSION" >/dev/null 2>&1 || git ls-remote --tags origin "v$NEW_VERSION" | grep -q "v$NEW_VERSION"; do
-              echo "⚠️ Version v$NEW_VERSION already exists, incrementing..."
-              VERSION=$NEW_VERSION
-              MAJOR=$(echo $VERSION | cut -d. -f1)
-              MINOR=$(echo $VERSION | cut -d. -f2)
-              PATCH=$(echo $VERSION | cut -d. -f3)
-              
-              if [ -z "$PATCH" ]; then
-                PATCH=0
-              fi
-              
-              if [ "$MAJOR" = "0" ]; then
-                if [ "$MINOR" -lt 9 ]; then
-                  NEW_MINOR=$((MINOR + 1))
-                  NEW_VERSION="0.$NEW_MINOR.0"
-                else
-                  NEW_VERSION="1.0.0"
-                fi
-              else
-                if [ "$MINOR" -lt 9 ]; then
-                  NEW_MINOR=$((MINOR + 1))
-                  NEW_VERSION="$MAJOR.$NEW_MINOR.0"
-                else
-                  NEW_MAJOR=$((MAJOR + 1))
-                  NEW_VERSION="$NEW_MAJOR.0.0"
-                fi
-              fi
-            done
           fi
-          
+
+          if [ "$BRANCH" = "pre-release" ]; then
+            EXISTING_RC=$(git tag --list "v${BASE_VERSION}-rc.*" | sort -V | tail -n1)
+
+            if [ -z "$EXISTING_RC" ]; then
+              RC_NUMBER=1
+            else
+              LAST_RC=${EXISTING_RC##*.}
+              RC_NUMBER=$((LAST_RC+1))
+            fi
+
+            NEW_VERSION="${BASE_VERSION}-rc.${RC_NUMBER}"
+            IS_PRERELEASE=true
+          else
+            NEW_VERSION="${BASE_VERSION}"
+            IS_PRERELEASE=false
+          fi
+
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Previous version: $LATEST_TAG"
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+
           echo "New version: $NEW_VERSION"
-          echo "New tag: v$NEW_VERSION"
 
       - name: Update package.json version
         run: |
@@ -178,7 +156,7 @@ jobs:
         run: |
           sed -i "s/^version:.*/version: ${{ steps.version.outputs.version }}/" helm/crossview/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.tag }}\"/" helm/crossview/Chart.yaml
-          sed -i "s|ghcr.io/corpobit/crossview:[0-9]\+\.[0-9]\+\.[0-9]\+|ghcr.io/corpobit/crossview:${{ steps.version.outputs.tag }}|" helm/crossview/Chart.yaml
+          sed -i "s|ghcr.io/crossplane-contrib/crossview:[0-9]\+\.[0-9]\+\.[0-9]\+|ghcr.io/crossplane-contrib/crossview:${{ steps.version.outputs.tag }}|" helm/crossview/Chart.yaml
           echo "Updated Chart.yaml:"
           cat helm/crossview/Chart.yaml
 
@@ -350,7 +328,7 @@ jobs:
           name: Release ${{ steps.version.outputs.tag }}
           body_path: CHANGELOG.md
           draft: false
-          prerelease: false
+          prerelease: ${{ needs.build-and-release.outputs.is_prerelease }}
           fail_on_unmatched_files: true
 
       - name: Set up Helm
@@ -364,7 +342,7 @@ jobs:
           CHART_TAG="${{ steps.version.outputs.tag }}"
           sed -i "s/^version:.*/version: $CHART_VERSION/" helm/crossview/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: \"$CHART_TAG\"/" helm/crossview/Chart.yaml
-          sed -i "s|ghcr.io/corpobit/crossview:v[0-9]\+\.[0-9]\+\.[0-9]\+|ghcr.io/corpobit/crossview:$CHART_TAG|" helm/crossview/Chart.yaml
+          sed -i "s|ghcr.io/crossplane-contrib/crossview:v[0-9]\+\.[0-9]\+\.[0-9]\+|ghcr.io/crossplane-contrib/crossview:$CHART_TAG|" helm/crossview/Chart.yaml
           echo "Updated Chart.yaml to version $CHART_VERSION (appVersion: $CHART_TAG):"
           cat helm/crossview/Chart.yaml
 
@@ -528,7 +506,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.update_github_pages == 'true'
         run: |
           cd gh-pages
-          helm repo index . --url https://corpobit.github.io/crossview
+          helm repo index . --url https://crossplane-contrib.github.io/crossview
           cat index.yaml
 
       - name: Create index.html for GitHub Pages
@@ -662,13 +640,13 @@ jobs:
                 <p class="tagline">Official Helm repository for Crossview – Crossplane visualization platform</p>
               </header>
               <h2>Install from OCI Registry (Recommended)</h2>
-              <pre><code id="oci-install">helm install crossview oci://ghcr.io/corpobit/crossview-chart \
+              <pre><code id="oci-install">helm install crossview oci://ghcr.io/crossplane-contrib/crossview-chart \
           --namespace crossview \
           --create-namespace</code>
                 <button class="copy" onclick="copy(this)">Copy</button>
               </pre>
               <h2>Add Helm Repository</h2>
-              <pre><code id="add">helm repo add crossview https://corpobit.github.io/crossview
+              <pre><code id="add">helm repo add crossview https://crossplane-contrib.github.io/crossview
           helm repo update</code>
                 <button class="copy" onclick="copy(this)">Copy</button>
               </pre>
@@ -685,7 +663,7 @@ jobs:
               </pre>
               <div class="footer">
                 <p>
-                  <a href="https://github.com/corpobit/crossview" target="_blank">GitHub</a> •
+                  <a href="https://github.com/crossplane-contrib/crossview" target="_blank">GitHub</a> •
                   <a href="index.yaml">index.yaml</a> •
                   Hosted on GitHub Pages
                 </p>

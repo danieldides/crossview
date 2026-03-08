@@ -74,7 +74,7 @@ jobs:
           fi
           sed -i "s/^version:.*/version: $VERSION/" helm/crossview/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: \"$TAG\"/" helm/crossview/Chart.yaml
-          sed -i "s|ghcr.io/corpobit/crossview:v[0-9]\+\.[0-9]\+\.[0-9]\+|ghcr.io/corpobit/crossview:$TAG|" helm/crossview/Chart.yaml
+          sed -i "s|ghcr.io/crossplane-contrib/crossview:v[0-9]\+\.[0-9]\+\.[0-9]\+|ghcr.io/crossplane-contrib/crossview:$TAG|" helm/crossview/Chart.yaml
           echo "Updated Chart.yaml to version $VERSION (appVersion: $TAG):"
           cat helm/crossview/Chart.yaml
 
@@ -120,7 +120,7 @@ jobs:
       - name: Update Helm repository index
         run: |
           cd gh-pages
-          helm repo index . --url https://corpobit.github.io/crossview
+          helm repo index . --url https://crossplane-contrib.github.io/crossview
           cat index.yaml
 
       - name: Create index.html for GitHub Pages
@@ -253,13 +253,13 @@ jobs:
                 <p class="tagline">Official Helm repository for Crossview – Crossplane visualization platform</p>
               </header>
               <h2>Install from OCI Registry (Recommended)</h2>
-              <pre><code id="oci-install">helm install crossview oci://ghcr.io/corpobit/crossview-chart \
+              <pre><code id="oci-install">helm install crossview oci://ghcr.io/crossplane-contrib/crossview-chart \
           --namespace crossview \
           --create-namespace</code>
                 <button class="copy" onclick="copy(this)">Copy</button>
               </pre>
               <h2>Add Helm Repository</h2>
-              <pre><code id="add">helm repo add crossview https://corpobit.github.io/crossview
+              <pre><code id="add">helm repo add crossview https://crossplane-contrib.github.io/crossview
           helm repo update</code>
                 <button class="copy" onclick="copy(this)">Copy</button>
               </pre>
@@ -276,7 +276,7 @@ jobs:
               </pre>
               <div class="footer">
                 <p>
-                  <a href="https://github.com/corpobit/crossview" target="_blank">GitHub</a> •
+                  <a href="https://github.com/crossplane-contrib/crossview" target="_blank">GitHub</a> •
                   <a href="index.yaml">index.yaml</a> •
                   Hosted on GitHub Pages
                 </p>

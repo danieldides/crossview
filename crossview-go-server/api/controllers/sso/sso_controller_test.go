@@ -8,9 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-contrib/sessions"
 	"crossview-go-server/lib"
 	"crossview-go-server/models"
+
+	"github.com/gin-contrib/sessions"
 )
 
 func setupMockSSOService() MockSSOService {
@@ -18,11 +19,11 @@ func setupMockSSOService() MockSSOService {
 }
 
 type MockSSOService struct {
-	GetSSOStatusFunc        func() lib.SSOConfig
-	InitiateOIDCFunc        func(ctx context.Context, callbackURL string) (string, error)
-	HandleOIDCCallbackFunc  func(ctx context.Context, code, state string, callbackURL string) (*models.User, error)
-	InitiateSAMLFunc        func(ctx context.Context, callbackURL string) (string, error)
-	HandleSAMLCallbackFunc  func(ctx context.Context, samlResponse string, callbackURL string) (*models.User, error)
+	GetSSOStatusFunc       func() lib.SSOConfig
+	InitiateOIDCFunc       func(ctx context.Context, callbackURL string) (string, error)
+	HandleOIDCCallbackFunc func(ctx context.Context, code, state string, callbackURL string) (*models.User, error)
+	InitiateSAMLFunc       func(ctx context.Context, callbackURL string) (string, error)
+	HandleSAMLCallbackFunc func(ctx context.Context, samlResponse string, callbackURL string) (*models.User, error)
 }
 
 func (m MockSSOService) GetSSOStatus() lib.SSOConfig {
@@ -425,4 +426,3 @@ func TestSSOController_HandleSAMLCallback_ServiceError(t *testing.T) {
 		t.Errorf("Expected redirect to '%s', got '%s'", expectedLocation, location)
 	}
 }
-

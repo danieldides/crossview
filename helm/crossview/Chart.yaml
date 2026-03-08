@@ -2,23 +2,23 @@ apiVersion: v2
 name: crossview
 description: A Helm chart for Crossview - Crossplane resource visualization and management platform
 type: application
-version: 3.4.0
-appVersion: "v3.4.0"
-icon: https://corpobit.github.io/crossview/images/helm-logo.svg
+version: 3.6.0-rc.7
+appVersion: "v3.6.0-rc.7"
+icon: https://crossplane-contrib.github.io/crossview/images/helm-logo.svg
 keywords:
   - kubernetes
   - crossplane
   - visualization
   - management
-home: https://github.com/corpobit/crossview
+home: https://github.com/crossplane-contrib/crossview
 sources:
-  - https://github.com/corpobit/crossview
+  - https://github.com/crossplane-contrib/crossview
 maintainers:
   - name: Crossview Team
 annotations:
   artifacthub.io/images: |
     - name: crossview
-      image: ghcr.io/corpobit/crossview:v3.4.0
+      image: ghcr.io/crossplane-contrib/crossview:v3.6.0-rc.7
     - name: postgres
       image: postgres:latest
 dependencies: []

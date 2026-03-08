@@ -48,6 +48,7 @@ export const Dropdown = ({
     <Box minW={minW} position="relative" ref={dropdownRef} {...props}>
       <Box
         as="button"
+        type="button"
         w="100%"
         px={3}
         py={2.5}
@@ -127,6 +128,7 @@ export const Dropdown = ({
               <Box
                 key={option.value || index}
                 as="button"
+                type="button"
                 w="100%"
                 px={3}
                 py={2.5}

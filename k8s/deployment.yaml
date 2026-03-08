@@ -23,7 +23,7 @@ spec:
       serviceAccountName: crossview-sa
       containers:
       - name: crossview
-        image: ghcr.io/corpobit/crossview:latest
+        image: ghcr.io/crossplane-contrib/crossview:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3001

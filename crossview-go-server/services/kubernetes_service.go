@@ -89,8 +89,6 @@ func (k *KubernetesService) GetContexts() ([]string, error) {
 	}
 
 	k.mu.RLock()
-	defer k.mu.RUnlock()
-
 	if k.kubeConfig == nil {
 		k.mu.RUnlock()
 		if err := k.loadKubeConfig(); err != nil {
@@ -98,6 +96,7 @@ func (k *KubernetesService) GetContexts() ([]string, error) {
 		}
 		k.mu.RLock()
 	}
+	defer k.mu.RUnlock()
 
 	contexts := make([]string, 0, len(k.kubeConfig.Contexts))
 	for name := range k.kubeConfig.Contexts {
