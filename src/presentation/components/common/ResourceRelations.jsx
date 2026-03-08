@@ -87,7 +87,7 @@ export const ResourceRelations = ({ resource, relatedResources, colorMode }) => 
     });
 
     return [mainNode, ...relatedNodes];
-  }, [resource, relatedResources]);
+  }, [resource, relatedResources, colorMode]); // ← added colorMode dependency
 
   const initialEdges = useMemo(() => {
     if (!resource) return [];
@@ -106,60 +106,90 @@ export const ResourceRelations = ({ resource, relatedResources, colorMode }) => 
   }, [initialNodes, resource, colorMode]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Update node styles dynamically when colorMode changes
+  // Reset nodes when initialNodes changes (resource or relatedResources changed)
+  useEffect(() => {
+    setNodes(initialNodes);
+    // Optional: you could also call onNodesChange([]) first if you want to fully clear
+    // but usually setNodes() is enough
+  }, [initialNodes, setNodes]);
+
+  // Reset edges when initialEdges changes
+  useEffect(() => {
+    setEdges(initialEdges);
+  }, [initialEdges, setEdges]);
+
+  // Update styles & labels when colorMode / resource / relatedResources change
   useEffect(() => {
     setNodes((nds) =>
-      nds.map((node) => ({
-        ...node,
-        style: {
-          ...node.style,
-          background:
-            node.id === 'main-resource'
-              ? getBackgroundColor(colorMode, 'primary')
-              : getBackgroundColor(colorMode, 'secondary'),
-          border: `1px solid ${getBorderColor(colorMode, 'gray')}`,
-          boxShadow: `0 1px 2px ${colors.shadow[colorMode === 'dark' ? 'dark' : 'light']}`,
-        },
-        data: {
-          ...node.data,
-          label: (
-            <Box textAlign="center" p={2}>
-              {node.id === 'main-resource' ? (
-                <>
+      nds.map((node) => {
+        const isMain = node.id === 'main-resource';
+
+        if (isMain) {
+          return {
+            ...node,
+            style: {
+              ...node.style,
+              background: getBackgroundColor(colorMode, 'primary'),
+              border: `0.5px solid ${getBorderColor(colorMode, 'gray')}`,
+              boxShadow: `0 2px 4px ${colors.shadow[colorMode === 'dark' ? 'dark' : 'light']}`,
+            },
+            data: {
+              ...node.data,
+              label: (
+                <Box textAlign="center" p={2}>
                   <Text fontWeight="bold" fontSize="sm" color={getTextColor(colorMode, 'primary')}>
-                    {resource.kind || 'Resource'}
+                    {resource?.kind || 'Resource'}
                   </Text>
                   <Text fontSize="xs" color={getTextColor(colorMode, 'secondary')} mt={1}>
-                    {resource.name}
+                    {resource?.name}
                   </Text>
-                </>
-              ) : (
-                <>
-                  <Text
-                    fontWeight="semibold"
-                    fontSize="xs"
-                    color={getTextColor(colorMode, 'primary')}
-                  >
-                    {relatedResources[parseInt(node.id.split('-')[1])].type ||
-                      relatedResources[parseInt(node.id.split('-')[1])].kind}
-                  </Text>
-                  <Text
-                    fontSize="xs"
-                    color={getTextColor(colorMode, 'secondary')}
-                    mt={1}
-                    maxW="120px"
-                    noOfLines={1}
-                  >
-                    {relatedResources[parseInt(node.id.split('-')[1])].name}
-                  </Text>
-                </>
-              )}
-            </Box>
-          ),
-        },
-      }))
+                </Box>
+              ),
+            },
+          };
+        }
+
+        // related node
+        const index = parseInt(node.id.split('-')[1], 10);
+        const related = relatedResources?.[index];
+
+        if (!related) return node; // safety
+
+        return {
+          ...node,
+          style: {
+            ...node.style,
+            background: getBackgroundColor(colorMode, 'secondary'),
+            border: `1px solid ${getBorderColor(colorMode, 'gray')}`,
+            boxShadow: `0 1px 2px ${colors.shadow[colorMode === 'dark' ? 'dark' : 'light']}`,
+          },
+          data: {
+            ...node.data,
+            label: (
+              <Box textAlign="center" p={2}>
+                <Text
+                  fontWeight="semibold"
+                  fontSize="xs"
+                  color={getTextColor(colorMode, 'primary')}
+                >
+                  {related.type || related.kind}
+                </Text>
+                <Text
+                  fontSize="xs"
+                  color={getTextColor(colorMode, 'secondary')}
+                  mt={1}
+                  maxW="120px"
+                  noOfLines={1}
+                >
+                  {related.name}
+                </Text>
+              </Box>
+            ),
+          },
+        };
+      })
     );
   }, [colorMode, resource, relatedResources, setNodes]);
 

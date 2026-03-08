@@ -62,6 +62,10 @@ func (s *ServeCommand) Run() lib.CommandRunner {
 			logger.Info("Database migrations completed successfully")
 			if env.AuthMode == "session" && env.DBEnabled {
 				hasAdmin, err := userRepo.HasAdmin()
+				if err != nil {
+					logger.Errorf("Failed to check for admin user: %v", err)
+					logger.Panicf("Failed to check for admin user: %v", err)
+				}
 				if !hasAdmin {
 					logger.Info("no admin user found. Creating admin user...")
 					err = createAdmin(env, *userRepo)

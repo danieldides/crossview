@@ -155,29 +155,35 @@ config:
         httpOnly: true
         maxAge: 86400000
 
+  # SSO configuration (example values provided, but SSO is disabled by default)
+  # sso:
+  #   oidc:
+  #     enabled: true
+  #     issuer: http://localhost:8080/realms/crossview
+  #     clientId: crossview-client
+  #     authorizationURL: ""
+  #     tokenURL: ""
+  #     userInfoURL: ""
+  #     callbackURL: http://localhost:3001/api/auth/oidc/callback
+  #     scope: openid profile email
+  #     usernameAttribute: preferred_username
+  #     emailAttribute: email
+  #     firstNameAttribute: given_name
+  #     lastNameAttribute: family_name
+  #   saml:
+  #     enabled: true
+  #     entryPoint: http://localhost:8080/realms/crossview/protocol/saml
+  #     issuer: crossview
+  #     callbackURL: http://localhost:3001/api/auth/saml/callback
+  #     usernameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+  #     emailAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+  #     firstNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname
+  #     lastNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname
   sso:
     oidc:
-      enabled: true
-      issuer: http://localhost:8080/realms/crossview
-      clientId: crossview-client
-      authorizationURL: ""
-      tokenURL: ""
-      userInfoURL: ""
-      callbackURL: http://localhost:3001/api/auth/oidc/callback
-      scope: openid profile email
-      usernameAttribute: preferred_username
-      emailAttribute: email
-      firstNameAttribute: given_name
-      lastNameAttribute: family_name
+      enabled: false
     saml:
-      enabled: true
-      entryPoint: http://localhost:8080/realms/crossview/protocol/saml
-      issuer: crossview
-      callbackURL: http://localhost:3001/api/auth/saml/callback
-      usernameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
-      emailAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
-      firstNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname
-      lastNameAttribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname
+      enabled: false
 
   vite:
     server:
@@ -190,11 +196,11 @@ config:
 # - Plain string: chart creates a secret with that value
 # - Object with secretKeyRef: references an existing secret (no creation)
 secrets:
-  adminUsername: admin
-  adminPassword: ChangeThisImmediately2026!
-  dbPassword: password
-  sessionSecret: sdoifjodsifjdofgijpdfogjdfgpjo
-  OIDCClientSecret: FPgPT2u0MSRbaVlCwdeQNGRhohPG5yuR
+  adminUsername: ""
+  adminPassword: ""
+  dbPassword: ""
+  sessionSecret: ""
+  OIDCClientSecret: ""
   SAMLCert: ""
 
   # Production override example: use existing secrets instead of chart-created ones
@@ -253,3 +259,5 @@ podLabels: {}
 
 autoscaling:
   enabled: false
+  minReplicas: 1
+  maxReplicas: 10

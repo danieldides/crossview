@@ -87,7 +87,7 @@ func NewEnv() Env {
 
 	env.CORSOrigin = getEnvOrDefault("CORS_ORIGIN",
 		getConfigValue("server.cors.origin", viper.GetString("CORS_ORIGIN"),
-			"http://localhost:3001"))
+			"http://localhost:5173"))
 	env.AuthMode = getEnvOrDefault("AUTH_MODE", getEnvOrDefault("AUTH_MODE",
 		getConfigValue("server.auth.mode", viper.GetString("AUTH_MODE"), "session")))
 
@@ -119,6 +119,8 @@ func NewEnv() Env {
 
 	env.AuthCreateUsers = firstNonEmpty(
 		os.Getenv("AUTH_CREATE_USERS"),
+		viper.GetString("server.auth.header.createUsers"),
+		"true",
 	) == "true"
 
 	return env

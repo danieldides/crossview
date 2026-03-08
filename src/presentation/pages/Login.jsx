@@ -39,8 +39,7 @@ export const Login = () => {
         ]);
         setSsoStatus(sso);
         setAuthState(auth);
-
-        console.log("status",sso)
+        
         if (auth.authenticated) {
           navigate('/');
         }

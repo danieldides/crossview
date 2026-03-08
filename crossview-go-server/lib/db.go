@@ -2,7 +2,6 @@ package lib
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -14,11 +13,6 @@ type Database struct {
 }
 
 func NewDatabase(env Env, logger Logger) Database {
-	logger.Info("OIDC is : " + strconv.FormatBool(env.OIDCEnabled))
-	logger.Info("SAML is : " + strconv.FormatBool(env.SAMLEnabled))
-	logger.Info("DB is : " + strconv.FormatBool(env.SAMLEnabled))
-	logger.Info("admin username  is : " + env.AdminUserName)
-	logger.Info("sso is : " + strconv.FormatBool((env.AuthMode == "session" && (env.SAMLEnabled || env.OIDCEnabled))))
 	if env.AuthMode == "header" || env.AuthMode == "none" || !env.DBEnabled {
 		logger.Info("Skipping database connection (auth mode is " + env.AuthMode + ")")
 		return Database{DB: nil}
