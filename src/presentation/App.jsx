@@ -7,6 +7,8 @@ import { Providers } from './pages/Providers.jsx';
 import { Functions } from './pages/Functions.jsx';
 import { Compositions } from './pages/Compositions.jsx';
 import { CompositeResourceDefinitions } from './pages/CompositeResourceDefinitions.jsx';
+import { ManagedResourceDefinitions } from './pages/ManagedResourceDefinitions.jsx';
+import { ManagedResourceActivationPolicies } from './pages/ManagedResourceActivationPolicies.jsx';
 import { CompositeResources } from './pages/CompositeResources.jsx';
 import { Claims } from './pages/Claims.jsx';
 import { Resources } from './pages/Resources.jsx';
@@ -125,6 +127,8 @@ function App() {
                 <Route path="functions" element={<Functions />} />
                 <Route path="compositions" element={<Compositions />} />
                 <Route path="xrds" element={<CompositeResourceDefinitions />} />
+                <Route path="mrds" element={<ManagedResourceDefinitions />} />
+                <Route path="mraps" element={<ManagedResourceActivationPolicies />} />
                 <Route path="composite-resources" element={<CompositeResources />} />
                 <Route path="composite-resources/:kind" element={<CompositeResourceKind />} />
                 <Route path="claims" element={<Claims />} />

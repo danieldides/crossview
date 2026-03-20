@@ -24,6 +24,12 @@ rules:
     resources:
       - customresourcedefinitions
     verbs: ["get", "list", "watch"]
+  # Crossplane v2 resources - read access
+  - apiGroups: ["apiextensions.crossplane.io"]
+    resources:
+      - managedresourceactivationpolicies
+      - managedresourcedefinitions
+    verbs: ["get", "list", "watch"]
   # All other API groups - read access (for Crossplane, etc.)
   - apiGroups: ["*"]
     resources: ["*"]

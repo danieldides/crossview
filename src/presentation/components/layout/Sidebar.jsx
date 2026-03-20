@@ -6,7 +6,7 @@ import {
   Button,
   Image,
 } from '@chakra-ui/react';
-import { FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp, FiLayout, FiSettings, FiPackage, FiFileText, FiLayers, FiBox, FiBook, FiServer, FiUsers, FiSliders, FiGrid, FiDatabase, FiCode, FiGithub } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp, FiLayout, FiSettings, FiPackage, FiFileText, FiLayers, FiBox, FiBook, FiServer, FiUsers, FiSliders, FiGrid, FiDatabase, FiCode, FiGithub, FiShield } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../providers/AppProvider.jsx';
@@ -145,6 +145,8 @@ export const Sidebar = ({ onToggle, onResize }) => {
     { id: 'functions', label: 'Functions', icon: FiCode, path: '/functions', tooltip: 'Crossplane Functions - composable building blocks for Compositions' },
     { id: 'xrds', label: 'XRDs', icon: FiBook, path: '/xrds', tooltip: 'Composite Resource Definitions - define custom resource types' },
     { id: 'compositions', label: 'Compositions', icon: FiLayers, path: '/compositions', tooltip: 'Templates that define how to compose resources' },
+    { id: 'mrds', label: 'MRDs', icon: FiBox, path: '/mrds', tooltip: 'Managed Resource Definitions - available managed resource types from providers' },
+    { id: 'mraps', label: 'MRAPs', icon: FiShield, path: '/mraps', tooltip: 'Managed Resource Activation Policies - control managed resource activation' },
     // Crossplane Instances (created resources)
     { 
       id: 'composite-resources', 
