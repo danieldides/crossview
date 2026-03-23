@@ -84,20 +84,61 @@ export const ManagedResourceActivationPolicies = () => {
   }
 
   if (error) {
+    // Check if this is a Crossplane 2.0 related error
+    const isCrossplane2Error = error.includes('500') || 
+      error.includes('could not find the requested resource') || 
+      error.includes('the server could not find the requested resource') ||
+      error.includes('Not Found') ||
+      error.includes('does not exist');
+
     return (
       <Box>
         <Text fontSize="2xl" fontWeight="bold" mb={6}>Managed Resource Activation Policies</Text>
         <Box
           p={6}
-          bg="red.50"
-          _dark={{ bg: 'red.900', borderColor: 'red.700', color: 'red.100' }}
+          bg={isCrossplane2Error ? "blue.50" : "red.50"}
+          _dark={{ bg: isCrossplane2Error ? "blue.900" : "red.900", borderColor: isCrossplane2Error ? "blue.700" : "red.700", color: isCrossplane2Error ? "blue.100" : "red.100" }}
           border="1px"
-          borderColor="red.200"
+          borderColor={isCrossplane2Error ? "blue.200" : "red.200"}
           borderRadius="md"
-          color="red.800"
+          color={isCrossplane2Error ? "blue.800" : "red.800"}
         >
-          <Text fontWeight="bold" mb={2}>Error loading managed resource activation policies</Text>
-          <Text>{error}</Text>
+          <Text fontWeight="bold" mb={2}>
+            {isCrossplane2Error ? "Crossplane 2.0 Resources Not Available" : "Error loading managed resource activation policies"}
+          </Text>
+          <Text mb={3}>
+            {isCrossplane2Error 
+              ? "Managed Resource Activation Policies are available in Crossplane 2.0+. Please upgrade your Crossplane installation to access these resources."
+              : error
+            }
+          </Text>
+          {isCrossplane2Error && (
+            <Text fontSize="sm" color={"blue.600"} _dark={{ color: "blue.300" }}>
+              Learn more about upgrading to Crossplane 2.0 in the{' '}
+              <a 
+                href="https://docs.crossplane.io/latest/get-started/install/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'underline' }}
+              >
+                official documentation
+              </a>.
+            </Text>
+          )}
+        </Box>
+      </Box>
+    );
+  }
+
+  // Show "No data found" when no MRAPs exist (like other pages)
+  if (!loading && mraps.length === 0) {
+    return (
+      <Box>
+        <Text fontSize="2xl" fontWeight="bold" mb={6}>Managed Resource Activation Policies</Text>
+        <Box p={6} textAlign="center">
+          <Text color="gray.500" _dark={{ color: 'gray.400' }}>
+            No managed resource activation policies found
+          </Text>
         </Box>
       </Box>
     );
