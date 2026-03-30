@@ -25,7 +25,7 @@ export const Compositions = () => {
   }, [location.pathname]);
 
   // Server-side pagination fetch function - memoized to prevent unnecessary re-renders
-  const fetchCompositions = useCallback(async (page, limit) => {
+  const fetchCompositions = useCallback(async (page, limit, searchTerm = '', searchableFields = []) => {
     if (!selectedContext) {
       return { items: [], totalCount: 0 };
     }
@@ -34,12 +34,8 @@ export const Compositions = () => {
     const apiVersion = 'apiextensions.crossplane.io/v1';
     const kind = 'Composition';
     
-    try {
-      const result = await kubernetesRepository.getResources(apiVersion, kind, null, contextName, limit, null);
-      const items = result.items || [];
-      
-      // Transform items to match the expected format
-      const transformedItems = items.map(comp => ({
+    const transformCompositions = (items) => {
+      return items.map(comp => ({
         name: comp.metadata?.name || 'unknown',
         namespace: comp.metadata?.namespace || null,
         uid: comp.metadata?.uid || '',
@@ -56,6 +52,48 @@ export const Compositions = () => {
         apiVersion: apiVersion,
         kind: kind,
       }));
+    };
+
+    const applySearchFilter = (items) => {
+      const trimmedSearch = searchTerm.trim().toLowerCase();
+      if (!trimmedSearch || searchableFields.length === 0) {
+        return items;
+      }
+
+      return items.filter(item => {
+        return searchableFields.some(field => {
+          const value = field.split('.').reduce((obj, key) => obj?.[key], item);
+          return String(value || '').toLowerCase().includes(trimmedSearch);
+        });
+      });
+    };
+    
+    try {
+      if (searchTerm.trim()) {
+        const allItems = [];
+        let continueToken = null;
+
+        do {
+          const result = await kubernetesRepository.getResources(apiVersion, kind, null, contextName, 100, continueToken);
+          const batch = result.items || [];
+          allItems.push(...batch);
+          continueToken = result.continueToken || null;
+        } while (continueToken);
+
+        const transformedItems = transformCompositions(allItems);
+        const filteredItems = applySearchFilter(transformedItems);
+        const startIndex = (page - 1) * limit;
+
+        return {
+          items: filteredItems.slice(startIndex, startIndex + limit),
+          totalCount: filteredItems.length,
+          continueToken: null
+        };
+      }
+
+      const result = await kubernetesRepository.getResources(apiVersion, kind, null, contextName, limit, null);
+      const items = result.items || [];
+      const transformedItems = transformCompositions(items);
       
       // Estimate total count if we have remaining items
       let estimatedTotal = null;

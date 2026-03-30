@@ -16,7 +16,7 @@ export const DataTable = ({
   itemsPerPage = 10,
   onRowClick,
   filters,
-  fetchData, // Callback for server-side pagination: (page, limit) => Promise<{ items, totalCount?, continueToken? }>
+  fetchData, // Callback for server-side pagination: (page, limit, searchTerm, searchableFields) => Promise<{ items, totalCount?, continueToken? }>
   totalCount, // Total count for server-side pagination
   serverSidePagination = false, // Enable server-side pagination
   loading = false, // Loading state for server-side pagination
@@ -32,12 +32,13 @@ export const DataTable = ({
   const [serverData, setServerData] = useState([]);
   const [serverTotalCount, setServerTotalCount] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const searchableFieldsKey = useMemo(() => searchableFields.join('|'), [searchableFields]);
 
   // Fetch data for server-side pagination
   useEffect(() => {
     if (serverSidePagination && fetchData) {
       setIsLoading(true);
-      fetchData(currentPage, itemsPerPage)
+      fetchData(currentPage, itemsPerPage, searchTerm, searchableFields)
         .then(result => {
           setServerData(result.items || []);
           setServerTotalCount(result.totalCount !== undefined ? result.totalCount : null);
@@ -50,12 +51,12 @@ export const DataTable = ({
           setIsLoading(false);
         });
     }
-  }, [serverSidePagination, fetchData, currentPage, itemsPerPage]);
+  }, [serverSidePagination, fetchData, currentPage, itemsPerPage, searchTerm, searchableFieldsKey]);
 
   const filteredData = useMemo(() => {
     let result = serverSidePagination ? serverData : data;
     
-    if (searchTerm && searchableFields.length > 0) {
+    if (!serverSidePagination && searchTerm && searchableFields.length > 0) {
       const lowerSearch = searchTerm.toLowerCase();
       result = result.filter(item => {
         return searchableFields.some(field => {
@@ -107,25 +108,15 @@ export const DataTable = ({
   }, [data, searchTerm, searchableFields, sortColumn, sortDirection, columns, serverSidePagination, serverData]);
 
   const paginatedData = useMemo(() => {
-    // For server-side pagination with search, we still need to paginate the filtered results
-    if (serverSidePagination && searchTerm) {
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      return filteredData.slice(startIndex, startIndex + itemsPerPage);
-    }
-    // For server-side pagination without search, data is already paginated
     if (serverSidePagination) {
       return filteredData;
     }
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredData, currentPage, itemsPerPage, serverSidePagination, searchTerm]);
+  }, [filteredData, currentPage, itemsPerPage, serverSidePagination]);
 
   const totalPages = useMemo(() => {
     if (serverSidePagination) {
-      // If searching, calculate pages from filtered data
-      if (searchTerm) {
-        return Math.ceil(filteredData.length / itemsPerPage);
-      }
       const count = totalCount !== undefined ? totalCount : serverTotalCount;
       if (count !== null && count !== undefined) {
         return Math.ceil(count / itemsPerPage);
@@ -134,14 +125,10 @@ export const DataTable = ({
       return currentPage + (serverData.length === itemsPerPage ? 1 : 0);
     }
     return Math.ceil(filteredData.length / itemsPerPage);
-  }, [serverSidePagination, totalCount, serverTotalCount, itemsPerPage, currentPage, serverData.length, filteredData.length, searchTerm]);
+  }, [serverSidePagination, totalCount, serverTotalCount, itemsPerPage, currentPage, serverData.length, filteredData.length]);
 
   const displayCount = useMemo(() => {
     if (serverSidePagination) {
-      // If searching, show filtered count; otherwise show server count
-      if (searchTerm) {
-        return filteredData.length;
-      }
       const count = totalCount !== undefined ? totalCount : serverTotalCount;
       if (count !== null && count !== undefined) {
         return count;
@@ -150,7 +137,7 @@ export const DataTable = ({
       return serverData.length === itemsPerPage ? (currentPage * itemsPerPage) + 1 : currentPage * itemsPerPage;
     }
     return filteredData.length;
-  }, [serverSidePagination, totalCount, serverTotalCount, serverData.length, itemsPerPage, currentPage, filteredData.length, searchTerm]);
+  }, [serverSidePagination, totalCount, serverTotalCount, serverData.length, itemsPerPage, currentPage, filteredData.length]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);

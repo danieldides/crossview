@@ -86,7 +86,7 @@ export const Resources = () => {
     };
   }, [selectedContext, kubernetesRepository, loadManagedResources]);
 
-  const fetchData = useCallback(async (page, pageSize) => {
+  const fetchData = useCallback(async (page, pageSize, searchTerm = '', searchableFields = []) => {
     if (!selectedContext || allManagedResources.length === 0) {
       return { items: [], totalCount: 0 };
     }
@@ -124,6 +124,16 @@ export const Resources = () => {
         
         return true;
       });
+
+      const trimmedSearch = searchTerm.trim().toLowerCase();
+      if (trimmedSearch && searchableFields.length > 0) {
+        filtered = filtered.filter(item => {
+          return searchableFields.some(field => {
+            const value = field.split('.').reduce((obj, key) => obj?.[key], item);
+            return String(value || '').toLowerCase().includes(trimmedSearch);
+          });
+        });
+      }
       
       const startIndex = (page - 1) * pageSize;
       const paginated = filtered.slice(startIndex, startIndex + pageSize);

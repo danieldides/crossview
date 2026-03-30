@@ -91,41 +91,47 @@ export class GetCompositeResourcesUseCase {
         };
       }
       
-      const numTypes = resourceTypes.length;
-      const perTypeLimit = limit ? Math.min(limit * 2, 50) : 50;
-      
       const resourcePromises = resourceTypes.map(async (resType) => {
         try {
-          const xrsResult = await this.kubernetesRepository.getResources(
-            resType.xrApiVersion,
-            resType.xrKind,
-            null,
-            context,
-            perTypeLimit,
-            null,
-            resType.xrPlural
-          );
-          
-          const xrs = xrsResult.items || xrsResult;
-          const xrsArray = Array.isArray(xrs) ? xrs : [];
-          
-          return xrsArray.map(xr => ({
-            name: xr.metadata?.name || 'unknown',
-            namespace: xr.metadata?.namespace || null,
-            uid: xr.metadata?.uid || '',
-            kind: resType.xrKind,
-            apiVersion: resType.xrApiVersion,
-            plural: resType.xrPlural,
-            creationTimestamp: xr.metadata?.creationTimestamp || '',
-            labels: xr.metadata?.labels || {},
-            compositionRef: xr.spec?.compositionRef || null,
-            claimRef: xr.spec?.claimRef || null,
-            writeConnectionSecretsTo: xr.spec?.writeConnectionSecretsTo || null,
-            resourceRefs: xr.spec?.resourceRefs || [],
-            status: xr.status || {},
-            conditions: xr.status?.conditions || [],
-            spec: xr.spec || {},
-          }));
+          const allTypeResources = [];
+          let typeContinueToken = null;
+
+          do {
+            const xrsResult = await this.kubernetesRepository.getResources(
+              resType.xrApiVersion,
+              resType.xrKind,
+              null,
+              context,
+              null,
+              typeContinueToken,
+              resType.xrPlural
+            );
+
+            const xrs = xrsResult.items || xrsResult;
+            const xrsArray = Array.isArray(xrs) ? xrs : [];
+
+            allTypeResources.push(...xrsArray.map(xr => ({
+              name: xr.metadata?.name || 'unknown',
+              namespace: xr.metadata?.namespace || null,
+              uid: xr.metadata?.uid || '',
+              kind: resType.xrKind,
+              apiVersion: resType.xrApiVersion,
+              plural: resType.xrPlural,
+              creationTimestamp: xr.metadata?.creationTimestamp || '',
+              labels: xr.metadata?.labels || {},
+              compositionRef: xr.spec?.compositionRef || null,
+              claimRef: xr.spec?.claimRef || null,
+              writeConnectionSecretsTo: xr.spec?.writeConnectionSecretsTo || null,
+              resourceRefs: xr.spec?.resourceRefs || [],
+              status: xr.status || {},
+              conditions: xr.status?.conditions || [],
+              spec: xr.spec || {},
+            })));
+
+            typeContinueToken = xrsResult.continueToken || null;
+          } while (typeContinueToken);
+
+          return allTypeResources;
         } catch (error) {
           return [];
         }
