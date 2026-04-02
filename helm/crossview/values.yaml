@@ -152,6 +152,10 @@ config:
     log:
       level: info
     cors:
+      # Public root URL of this Crossview instance (no trailing slash).
+      # IMPORTANT: Change this to your actual ingress host in production.
+      # This value is used as the post-SSO-login redirect destination. If left
+      # as localhost, users will be redirected to localhost after SSO authentication.
       origin: http://localhost:5173
       credentials: true
     session:
@@ -201,8 +205,8 @@ config:
 # - Plain string: chart creates a secret with that value
 # - Object with secretKeyRef: references an existing secret (no creation)
 secrets:
-  adminUsername: ""
-  adminPassword: ""
+  adminUsername: "admin"
+  adminPassword: "password"
   dbPassword: ""
   sessionSecret: ""
   OIDCClientSecret: ""

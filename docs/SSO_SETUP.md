@@ -16,6 +16,32 @@ Crossview supports **any OIDC (OpenID Connect) or SAML 2.0 provider** for Single
 
 4. **SSO login buttons** will appear on the login page
 
+## Required: Set `server.cors.origin` for Production
+
+> **This is a mandatory step for any non-local deployment.** After a successful SSO login, Crossview redirects the user back to the frontend using the `server.cors.origin` value (env var: `CORS_ORIGIN`). It defaults to `http://localhost:5173`. If you do not override it with your public URL, the post-login redirect will send the user to `localhost` instead of your actual host.
+
+**Config file:**
+```yaml
+server:
+  cors:
+    origin: https://crossview.example.com
+```
+
+**Environment variable:**
+```bash
+CORS_ORIGIN=https://crossview.example.com
+```
+
+**Helm values:**
+```yaml
+config:
+  server:
+    cors:
+      origin: "https://crossview.example.com"
+```
+
+Set this to the root URL of your Crossview instance (no trailing slash).
+
 ## OIDC Configuration
 
 Works with any OpenID Connect provider (Auth0, Okta, Azure AD, Google, Keycloak, etc.)
@@ -28,7 +54,8 @@ sso:
     issuer: https://your-provider.com/realms/your-realm  # OIDC discovery endpoint
     clientId: your-client-id
     clientSecret: your-client-secret
-    callbackURL: http://localhost:3001/api/auth/oidc/callback
+    # Must be the full callback path on your public host:
+    callbackURL: https://crossview.example.com/api/auth/oidc/callback
     scope: openid profile email
     
     # Optional: Custom attribute mappings
@@ -41,7 +68,7 @@ sso:
 ### OIDC Provider Setup
 
 1. **Create an OIDC client** in your provider
-2. **Set the redirect URI** to: `http://localhost:3001/api/auth/oidc/callback`
+2. **Set the redirect URI** to: `https://crossview.example.com/api/auth/oidc/callback`
 3. **Copy the client ID and secret** to your config
 4. **Use the issuer URL** (usually ends with `/realms/...` or `/oauth2/...`)
 
@@ -87,7 +114,7 @@ oidc:
   issuer: https://your-tenant.auth0.com/
   clientId: your-auth0-client-id
   clientSecret: your-auth0-client-secret
-  callbackURL: http://localhost:3001/api/auth/oidc/callback
+  callbackURL: https://crossview.example.com/api/auth/oidc/callback
 ```
 
 ### Okta
@@ -96,7 +123,7 @@ oidc:
   issuer: https://your-tenant.okta.com/oauth2/default
   clientId: your-okta-client-id
   clientSecret: your-okta-client-secret
-  callbackURL: http://localhost:3001/api/auth/oidc/callback
+  callbackURL: https://crossview.example.com/api/auth/oidc/callback
 ```
 
 ### Azure AD
@@ -105,7 +132,7 @@ oidc:
   issuer: https://login.microsoftonline.com/your-tenant-id/v2.0
   clientId: your-azure-app-id
   clientSecret: your-azure-app-secret
-  callbackURL: http://localhost:3001/api/auth/oidc/callback
+  callbackURL: https://crossview.example.com/api/auth/oidc/callback
 ```
 
 ### Google
@@ -114,7 +141,7 @@ oidc:
   issuer: https://accounts.google.com
   clientId: your-google-client-id
   clientSecret: your-google-client-secret
-  callbackURL: http://localhost:3001/api/auth/oidc/callback
+  callbackURL: https://crossview.example.com/api/auth/oidc/callback
 ```
 
 ## Keycloak (Optional Example)

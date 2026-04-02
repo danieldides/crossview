@@ -74,6 +74,9 @@ For local development:
 NODE_ENV=production        # Environment (development/production)
 PORT=3001                  # Server port
 SESSION_SECRET=your-secret # Session encryption key (generate with: openssl rand -base64 32)
+CORS_ORIGIN=https://crossview.example.com  # Public root URL of this instance.
+                           # Required when using SSO: after login the user is redirected here.
+                           # Defaults to http://localhost:5173 — must be overridden in production.
 ```
 
 ### Authentication Modes
@@ -107,6 +110,24 @@ session:
   secure: false     # Set to true for HTTPS
   httpOnly: true
 ```
+
+### Default Admin Credentials
+
+When running in `session` auth mode with the database enabled, a default admin account is created on first start:
+
+| Field    | Default    |
+|----------|------------|
+| Username | `admin`    |
+| Password | `password` |
+
+> **Change these immediately in production.** Override them via Helm values or environment variables:
+>
+> ```yaml
+> secrets:
+>   adminUsername: "your-admin-username"
+>   adminPassword: "your-strong-password"
+> ```
+> Or via environment variables: `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
 
 ## SSO Configuration
 
@@ -199,22 +220,26 @@ SESSION_SECRET=<strong-random-secret>
 
 ## Security Best Practices
 
-1. **Session Secret**
+1. **Default Admin Credentials**
+   - Default username/password is `admin`/`password`
+   - Change immediately on first deployment via `secrets.adminUsername` / `secrets.adminPassword` in Helm, or `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars
+
+2. **Session Secret**
    - Generate with: `openssl rand -base64 32`
    - Never commit to version control
    - Use different secrets per environment
 
-2. **Database Password**
+3. **Database Password**
    - Use strong passwords
    - Store in Kubernetes Secrets
    - Rotate regularly
 
-3. **SSO Secrets**
+4. **SSO Secrets**
    - Store client secrets securely
    - Use Kubernetes Secrets
    - Rotate according to provider policy
 
-4. **RBAC**
+5. **RBAC**
    - Follow principle of least privilege
    - Use read-only access for dashboard
    - Review ClusterRole permissions
@@ -247,8 +272,7 @@ kubectl exec -n crossview <pod-name> -- env | grep -E "DB_|NODE_|PORT"
 - Check service account token
 
 **SSO Not Working**
-- Verify callback URLs match
-- Check client ID and secret
+- Verify callback URLs match - Ensure `CORS_ORIGIN` (or `config.server.cors.origin` / Helm `config.server.cors.origin`) is set to the public root URL of your Crossview instance. If it is left at the default (`http://localhost:5173`), the post-login redirect will send users to localhost after authentication.- Check client ID and secret
 - Verify certificate (SAML)
 - Check provider logs
 
